@@ -1,24 +1,15 @@
 <!-- 
 Autors: Toms Trencis
 Grupa: 110
-Versija: 1-->
-
-<!-- Kas ir localStorage pārlūkprogrammā?
-    ATB: localStorage ir īpašība, kas ļauj JavaScript vietnēm un lietotnēm saglabāt atslēgu-vērtību pārus tīmekļa pārlūkprogrammā bez derīguma termiņa.
-    
-    Atšķirībā no  mainīgajiem (let vai const), kuru vērtības pazūd pēc lapas pārlādes (F5), localStorage saglabā datus pārlūkprogrammā bez derīguma termiņa un 
-    tie nepazūd pat pēc lapas pārlādes, pārlūka aizvēršanas vai atkārtotas atvēršanas. -->
-<<!-- 
-Autors: Toms Trencis
-Grupa: 110
 Versija: 1
 -->
 
 <!-- Kas ir localStorage pārlūkprogrammā?
     ATB: localStorage ir īpašība, kas ļauj JavaScript vietnēm un lietotnēm saglabāt atslēgu-vērtību pārus tīmekļa pārlūkprogrammā bez derīguma termiņa.
     
-    Atšķirībā no  mainīgajiem (let vai const), kuru vērtības pazūd pēc lapas pārlādes (F5), localStorage saglabā datus pārlūkprogrammā bez derīguma termiņa un 
-    tie nepazūd pat pēc lapas pārlādes, pārlūka aizvēršanas vai atkārtotas atvēršanas. -->
+    Atšķirībā no mainīgajiem (let vai const), kuru vērtības pazūd pēc lapas pārlādes (F5), localStorage saglabā datus pārlūkprogrammā bez derīguma termiņa un 
+    tie nepazūd pat pēc lapas pārlādes, pārlūka aizvēršanas vai atkārtotas atvēršanas. 
+-->
 
 <!DOCTYPE html>
 <html lang="lv">
@@ -47,41 +38,69 @@ const input = document.getElementById("taskInput");
 const button = document.getElementById("addButton");
 const list = document.getElementById("taskList");
 
-button.onclick = function () {
-    const text = input.value.trim();
-    if (text === "") return;
+function saveTasks() {
+    const tasks = [];
 
+    document.querySelectorAll("#taskList li").forEach(li => {
+        const span = li.querySelector("span");
+        tasks.push({
+            text: span.textContent,
+            done: span.classList.contains("text-decoration-line-through")
+        });
+    });
+
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function addTask(text, done = false) {
     const li = document.createElement("li");
     li.className = "list-group-item d-flex justify-content-between align-items-center";
-
 
     const span = document.createElement("span");
     span.textContent = text;
     span.style.cursor = "pointer";
 
+    if (done) {
+        span.classList.add("text-decoration-line-through");
+    }
 
     span.onclick = function () {
         span.classList.toggle("text-decoration-line-through");
+        saveTasks();
     };
-
 
     const deleteButton = document.createElement("button");
     deleteButton.className = "btn btn-danger btn-sm";
     deleteButton.textContent = "Dzēst";
+
     deleteButton.onclick = function (e) {
         e.stopPropagation(); 
         li.remove();
+        saveTasks();
     };
 
     li.appendChild(span);
     li.appendChild(deleteButton);
     list.appendChild(li);
 
+    saveTasks();
+}
+
+function loadTasks() {
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    tasks.forEach(task => addTask(task.text, task.done));
+}
+
+button.onclick = function () {
+    const text = input.value.trim();
+    if (text === "") return;
+
+    addTask(text);
     input.value = "";
 };
+
+loadTasks();
 </script>
 
 </body>
-</html>
-
 </html>
