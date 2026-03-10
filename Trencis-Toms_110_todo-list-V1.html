@@ -34,12 +34,19 @@ Versija: 1
             <button id="addButton" class="btn btn-primary">Pievienot</button>
         </div>
 
-        <div class="btn-group mb-3" role="group">
-            <button type="button" class="btn btn-outline-secondary active" id="visiUzdevumi">Visi</button>
-            <button type="button" class="btn btn-outline-secondary" id="aktivieuzdevumi">Aktīvie</button>
-            <button type="button" class="btn btn-outline-secondary" id="pabeigtieUzdevumi">Pabeigtie</button>
+        <div class="d-flex gap-2 mb-3">
+            <input id="searchInput" type="text" class="form-control" placeholder="Meklēt uzdevumu...">
+            
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary active" id="visiUzdevumi">Visi</button>
+                <button type="button" class="btn btn-outline-secondary" id="aktivieuzdevumi">Aktīvie</button>
+                <button type="button" class="btn btn-outline-secondary" id="pabeigtieUzdevumi">Pabeigtie</button>
+            </div>
         </div>
+
         <ul id="taskList" class="list-group"></ul>
+
+        <div id="statusSummary" class="mt-3"></div>
     </div>
 </div>
 
@@ -48,7 +55,21 @@ const input = document.getElementById("taskInput");
 const button = document.getElementById("addButton");
 const list = document.getElementById("taskList");
 const prioritySelect = document.getElementById("prioritySelect");
+const searchInput = document.getElementById("searchInput");
+const statusSummary = document.getElementById("statusSummary");
 let currentFilter = "visiUzdevumi";
+
+function updateSummary() {
+    const activeTasks = Array.from(document.querySelectorAll("#taskList li")).filter(li => {
+        return !li.querySelector(".task-text").classList.contains("text-decoration-line-through");
+    }).length;
+    
+    if (activeTasks === 0) {
+        statusSummary.textContent = "Visi darbi pabeigti!";
+    } else {
+        statusSummary.textContent = "Atlikuši " + activeTasks + " darbi";
+    }
+}
 
 function saveTasks() {
     const tasks = [];
@@ -63,7 +84,8 @@ function saveTasks() {
 
 function filterTasks(type) {
     currentFilter = type;
-    
+    const searchTerm = searchInput.value.toLowerCase();
+
     document.querySelectorAll(".btn-group .btn").forEach(btn => {
         btn.classList.remove("active");
         if (btn.id === type) {
@@ -73,14 +95,24 @@ function filterTasks(type) {
 
     const items = document.querySelectorAll("#taskList li");
     items.forEach(function (li) {
+        const text = li.querySelector(".task-text").textContent.toLowerCase();
         const isDone = li.querySelector(".task-text").classList.contains("text-decoration-line-through");
+        
+        const matchesSearch = text.includes(searchTerm);
+        let matchesFilter = false;
 
         if (type === "visiUzdevumi") {
-            li.style.setProperty("display", "flex", "important");
+            matchesFilter = true;
         } else if (type === "aktivieuzdevumi") {
-            li.style.setProperty("display", isDone ? "none" : "flex", "important");
+            matchesFilter = !isDone;
         } else if (type === "pabeigtieUzdevumi") {
-            li.style.setProperty("display", isDone ? "flex" : "none", "important");
+            matchesFilter = isDone;
+        }
+
+        if (matchesSearch && matchesFilter) {
+            li.style.setProperty("display", "flex", "important");
+        } else {
+            li.style.setProperty("display", "none", "important");
         }
     });
 }
@@ -115,6 +147,7 @@ function addTask(text, priority, done = false) {
         textSpan.classList.toggle("text-decoration-line-through");
         saveTasks();
         filterTasks(currentFilter);
+        updateSummary();
     };
 
     const left = document.createElement("div");
@@ -129,6 +162,7 @@ function addTask(text, priority, done = false) {
     deleteButton.onclick = function () {
         li.remove();
         saveTasks();
+        updateSummary();
     };
 
     li.appendChild(left);
@@ -137,6 +171,7 @@ function addTask(text, priority, done = false) {
 
     saveTasks();
     filterTasks(currentFilter);
+    updateSummary();
 }
 
 function loadTasks() {
@@ -159,6 +194,10 @@ input.addEventListener("keypress", function (e) {
     }
 });
 
+searchInput.addEventListener("input", function () {
+    filterTasks(currentFilter);
+});
+
 document.getElementById("visiUzdevumi").addEventListener("click", function () {
     filterTasks("visiUzdevumi");
 });
@@ -172,8 +211,8 @@ document.getElementById("pabeigtieUzdevumi").addEventListener("click", function 
 });
 
 loadTasks();
+updateSummary();
 </script>
 
 </body>
 </html>
-
